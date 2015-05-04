@@ -1,8 +1,8 @@
 %% Neural Network in Octave/Matlab
 
 %% Disclamer: this solution is based on the very good materials 
-%% provided by Andrew Ng, in his course Machine Learning, 
-%% from Stanford University, and also available in Coursera.
+%% provided by Andrew Ng, in his course Machine Learning Course, 
+%% from Stanford University, available in Coursera.
 
 %% Initialization
 
@@ -16,13 +16,14 @@ fprintf('Loading and Visualizing Data...\n')
 
 
 %load('train.csv');
-train = csvread('train.csv');
+train_csv = './../train.csv';
+train = csvread(train_csv);
 %X = train(:,2:end); % alias
 %y = train(:,1);
 
 % Just for the local PC testing
-X = train(1:2, 2:end);
-y = train(1:2,1);
+X = train(1:5, 2:end);
+y = train(1:5,1);
 [m, n] = size(X);
 
 fprintf('Data loaded\n');
@@ -70,7 +71,32 @@ function [h] = sigmoid(z)
 	h = 1.0/(1+ exp(-z));
 end
 
-function [J, gradient] = LRCostFunc(theta, X, y, lambda = 0.01)
+function [J, gradient] = LRCostFunc4FminUnc(theta, X, y, lambda = 0.01)
+	% Computes cost and gradient for logistic regression with regularization
+	
+	m = size(X,1);
+	% Add intercept to X:
+	X = [ ones(m,1) X];
+	
+	
+	J = 0;
+	h = sigmoid(X * theta);
+
+	regularization = lambda/(2.0*m) .* sum(theta.^2)
+	J = (-1.0/m * sum( y .* log(h) .+ (1.-y).*log(1.-h) )) + regularization
+
+	gradient = zeros(size(theta));
+	size(gradient)
+
+	%gradient(1) = 1.0/m * sum( (h .- y).*X(:,1)  );
+	theta(1) = 0;
+	for i=1:size(theta)
+		gradReg = lambda/m * theta(i);
+		gradient(i) = 1.0/m * sum( (h' .- y).*X(:,i)  ) + gradReg; %'
+	end
+end
+
+function [J] = LRCostFunc(theta, X, y, lambda = 0.01)
 	% Computes cost and gradient for logistic regression with regularization
 	
 	m = size(X,1);
@@ -104,7 +130,7 @@ initial_thetas = zeros(n+1,1);
 
 %% Using fminunc function to obtain Initial Theta Parameters:
 
-%  Set options for fminunc
+%  Set options for fminunc / fmincg
 options = optimset('GradObj', 'on', 'MaxIter', 3);
 
 % For each of the classes (c):
@@ -129,3 +155,4 @@ end
 %% Test Predictions
 predictions = zeros(m,1);
 csvwrite("predictions.csv", predictions);
+
